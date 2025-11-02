@@ -112,6 +112,29 @@
                     <button id="tombol-logout" class="text-sm font-medium text-blue-600 hover:text-blue-800">Logout</button>
                 </div>
             </header>
+
+            <!-- (BARU) PANEL ADMIN - Disembunyikan secara default -->
+            <div id="admin-panel" class="hidden mb-6 bg-yellow-50 border border-yellow-300 shadow-lg rounded-2xl overflow-hidden">
+                <div class="px-6 py-5 bg-yellow-100 border-b border-yellow-300">
+                    <h2 class="text-xl font-semibold text-yellow-900">Panel Admin</h2>
+                    <p class="text-sm text-yellow-800 mt-1">Alat ini hanya terlihat oleh Anda (Admin).</p>
+                </div>
+                <div class="p-6 space-y-4">
+                    <h3 class="text-lg font-medium text-gray-900">Upgrade User ke PRO</h3>
+                    <div>
+                        <label for="admin-user-id" class="block text-sm font-medium text-gray-700">User ID (Salin dari pesan WA)</label>
+                        <input type="text" id="admin-user-id" placeholder="Masukkan User ID pengguna..." class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="admin-voucher-code" class="block text-sm font-medium text-gray-700">Kode Voucher (Opsional, untuk pelacakan)</label>
+                        <input type="text" id="admin-voucher-code" placeholder="Contoh: JANA (Opsional)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button id="admin-upgrade-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700">
+                        Upgrade Pengguna Ini ke PRO (1 Tahun)
+                    </button>
+                    <p id="admin-status-message" class="text-center text-sm font-medium"></p>
+                </div>
+            </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -150,7 +173,7 @@
                                     <div class="sm:col-span-2">
                                          <label for="logo-usaha" class="block text-sm font-medium text-gray-700">Upload Logo/Banner (Opsional)</label>
                                         <input type="file" id="logo-usaha" accept="image/png, image/jpeg" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                        <p class="text-xs text-gray-500 mt-1">Disarankan: Lebar 800px (format PNG/JPG). Panjang/tinggi otomatis.</p>
+                                        <p class="text-xs text-gray-500 mt-1">Disarankan: Lebar 800 X 200 px (format PNG/JPG).</p>
                                         <img id="logo-preview" class="hidden mt-2 max-h-24 border border-gray-200 rounded" alt="Pratinjau Logo">
                                     </div>
                                     
@@ -239,7 +262,7 @@
                                 
                                 <div id="form-tambah-layanan" class="hidden space-y-2 mt-2 p-3 bg-gray-50 rounded-lg border">
                                     <label for="input-nama-layanan-baru" class="block text-sm font-medium text-gray-700">Nama Layanan Baru:</label>
-                                    <input type="text" id="input-nama-layanan-baru" placeholder="Contoh: Panggung Rigging" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text" id="input-nama-layanan-baru" placeholder="Contoh: Pentas Seni (Nama Grup)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                     <div class="flex space-x-2">
                                         <button type="button" id="tombol-simpan-layanan-baru" class="text-sm py-1 px-3 border border-transparent rounded-lg shadow-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Simpan</button>
                                         <button type="button" id="tombol-batal-layanan-baru" class="text-sm py-1 px-3 border border-gray-300 rounded-lg shadow-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Batal</button>
@@ -450,6 +473,7 @@
     <!-- Script Firebase (Wajib) -->
     <script type="module">
         // Import fungsi yang diperlukan dari SDK
+        // (MODIFIKASI) Menambahkan Timestamp
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
@@ -462,10 +486,13 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, collection, onSnapshot, 
-            query, setLogLevel, deleteDoc, setDoc, getDoc 
+            query, setLogLevel, deleteDoc, setDoc, getDoc, Timestamp 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI DAN INISIALISASI ---
+
+        // (BARU) Tentukan email admin di sini
+        const ADMIN_EMAIL = "janawhilayu@gmail.com"; 
 
         // Konfigurasi layanan kita (HARDCODED untuk aplikasi ini)
         const LAYANAN_TERSEDIA = [
@@ -913,6 +940,31 @@
             }).format(angka || 0);
         }
         
+        // (BARU) 11.5 Helper function untuk cek status PRO
+        /**
+         * Memeriksa apakah pengguna secara aktif PRO berdasarkan tanggal kedaluwarsa.
+         * @param {string} status - Status dari dokumen ("free" atau "pro").
+         * @param {Timestamp} expiryTimestamp - Timestamp kedaluwarsa dari Firestore (bisa undefined).
+         * @returns {boolean} - true jika PRO aktif, false jika tidak.
+         */
+        function isUserPro(status, expiryTimestamp) {
+            if (status !== "pro") {
+                return false; // Jelas bukan pro
+            }
+            if (!expiryTimestamp) {
+                // Jika status "pro" tapi tidak ada tanggal kedaluwarsa (data lama),
+                // kita anggap sudah kedaluwarsa untuk memberlakukan sistem baru.
+                return false; 
+            }
+            
+            // Ubah Firestore Timestamp menjadi JS Date
+            const expiryDate = expiryTimestamp.toDate();
+            const now = new Date();
+            
+            // Kembalikan true HANYA jika tanggal kedaluwarsa masih di masa depan
+            return expiryDate > now;
+        }
+
         // 12. Helper function untuk format tanggal
         function formatTanggal(isoDate) {
             if (!isoDate) return 'N/A';
@@ -1146,7 +1198,7 @@ Terima kasih atas kepercayaan Anda.
 
             // Logika Watermark
             let watermarkHtml = '';
-            // Baca dari variabel global yang di-set saat login
+            // (MODIFIKASI) Cek variabel global, yang SUDAH dicek kedaluwarsanya
             if (currentUserStatus === "free") {
                 watermarkHtml = `
                     <div style="
@@ -1765,7 +1817,7 @@ Terima kasih atas kepercayaan Anda.
             const infoHargaPromo = document.getElementById('info-harga-promo');
             
             // (DIUBAH) Gunakan Array untuk menampung semua kode valid
-            const VOUCHER_VALID = ["ADJIE", "JANA", "SYUKUR"]; 
+            const VOUCHER_VALID = ["JANA", "ADJIE", "SYUKUR"]; 
 
             const closeModal = () => {
                 upgradeModal.classList.add('hidden');
@@ -1824,6 +1876,84 @@ Terima kasih atas kepercayaan Anda.
             });
         }
 
+        // (MODIFIKASI) 27. Setup listener untuk Panel Admin (Menambahkan Expiry Date)
+        function setupAdminPanel() {
+            const upgradeButton = document.getElementById('admin-upgrade-button');
+            const statusMessage = document.getElementById('admin-status-message');
+            const userIdInput = document.getElementById('admin-user-id');
+            const voucherCodeInput = document.getElementById('admin-voucher-code');
+
+            upgradeButton.addEventListener('click', async () => {
+                const userIdToUpgrade = userIdInput.value.trim();
+                const voucherCode = voucherCodeInput.value.trim().toUpperCase();
+
+                // Validasi input (Hanya User ID yang wajib)
+                if (!userIdToUpgrade) {
+                    statusMessage.textContent = "Error: User ID tidak boleh kosong.";
+                    statusMessage.className = "text-center text-sm font-medium text-red-600";
+                    return;
+                }
+
+                upgradeButton.disabled = true;
+                upgradeButton.textContent = "Memproses...";
+                statusMessage.textContent = "Sedang meng-upgrade...";
+                statusMessage.className = "text-center text-sm font-medium text-blue-600";
+
+                try {
+                    // Tentukan path ke dokumen pengguna yang akan di-upgrade
+                    const userDocRef = doc(db, 'artifacts', appId, 'users', userIdToUpgrade);
+
+                    // (MODIFIKASI) Hitung tanggal kedaluwarsa (1 tahun dari sekarang)
+                    const now = new Date();
+                    const expiryDate = new Date(now.setFullYear(now.getFullYear() + 1));
+                    const expiryTimestamp = Timestamp.fromDate(expiryDate); // Ubah ke Timestamp Firestore
+
+                    // Buat objek data secara dinamis
+                    let dataToUpdate = {
+                        status: "pro",
+                        proExpiresAt: expiryTimestamp // <-- FIELD BARU
+                    };
+
+                    // Hanya tambahkan field voucherUsed JIKA diisi
+                    if (voucherCode) {
+                        dataToUpdate.voucherUsed = voucherCode;
+                    }
+
+                    // Jalankan perintah write dengan data yang dinamis
+                    await setDoc(userDocRef, dataToUpdate, { merge: true });
+
+                    // Pesan sukses yang dinamis
+                    const expiryDateString = expiryDate.toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+                    
+                    if (voucherCode) {
+                        statusMessage.textContent = `Sukses! Pengguna ${userIdToUpgrade} sekarang PRO (hingga ${expiryDateString}) dengan voucher ${voucherCode}.`;
+                    } else {
+                        statusMessage.textContent = `Sukses! Pengguna ${userIdToUpgrade} sekarang PRO (hingga ${expiryDateString}).`;
+                    }
+                    statusMessage.className = "text-center text-sm font-medium text-green-600";
+                    
+                    // Reset input
+                    userIdInput.value = '';
+                    voucherCodeInput.value = '';
+
+                } catch (error) {
+                    console.error("Gagal upgrade user:", error);
+                    // Tampilkan error
+                    if (error.code === 'permission-denied') {
+                        statusMessage.textContent = "Error: Gagal! Cek Aturan Keamanan Firebase Anda.";
+                    } else {
+                        statusMessage.textContent = `Error: Gagal meng-upgrade. (${error.message})`;
+                    }
+                    statusMessage.className = "text-center text-sm font-medium text-red-600";
+                } finally {
+                    upgradeButton.disabled = false;
+                    upgradeButton.textContent = "Upgrade Pengguna Ini ke PRO (1 Tahun)";
+                }
+            });
+        }
+
 
         // 8. Fungsi Autentikasi dan Inisialisasi (DIMODIFIKASI BESAR)
         async function autentikasiDanInisialisasi() {
@@ -1869,36 +1999,62 @@ Terima kasih atas kepercayaan Anda.
                         userId = user.uid;
                         isAuthReady = true;
                         
-                        // (PERBAIKAN) Ambil status pengguna dari path yang benar
+                        // (MODIFIKASI) Logika status dengan pengecekan kedaluwarsa
+                        const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid);
+                        let proExpiryDateString = null; // Untuk menampilkan tanggal kedaluwarsa
+                        
                         try {
-                            const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid);
                             const userDocSnap = await getDoc(userDocRef);
                             
                             if (userDocSnap.exists()) {
-                                currentUserStatus = userDocSnap.data().status || "free";
+                                const userData = userDocSnap.data();
+                                const status = userData.status || "free";
+                                const expiry = userData.proExpiresAt; // Firestore Timestamp atau undefined
+
+                                // (MODIFIKASI) Cek apakah PRO aktif menggunakan fungsi helper
+                                const isProActive = isUserPro(status, expiry);
+
+                                if (isProActive) {
+                                    currentUserStatus = "pro";
+                                    // Simpan tanggal kedaluwarsa untuk ditampilkan
+                                    proExpiryDateString = expiry.toDate().toLocaleDateString('id-ID', {
+                                        day: 'numeric', month: 'long', year: 'numeric'
+                                    });
+                                } else {
+                                    currentUserStatus = "free";
+                                }
+
+                                // Jika email belum ada di dokumen, tambahkan
+                                if (!userData.email && user.email) {
+                                    await setDoc(userDocRef, { email: user.email }, { merge: true });
+                                }
+
                             } else {
-                                // Failsafe: Buat profil jika belum ada (cth: pengguna lama / token canvas)
+                                // Failsafe: Buat profil jika belum ada
                                 console.warn("Profil pengguna tidak ditemukan, membuat profil 'free'...");
-                                await setDoc(userDocRef, { // (PERBAIKAN) Gunakan path yang benar
-                                    email: user.email || `user_${user.uid}`, // Handle email null di canvas
+                                await setDoc(userDocRef, {
+                                    email: user.email || `user_${user.uid}`,
                                     status: "free"
-                                }, { merge: true }); // Gunakan merge
+                                }, { merge: true });
                                 currentUserStatus = "free";
                             }
                         } catch (err) {
                             console.error("Gagal mengambil status pengguna:", err);
                             currentUserStatus = "free"; // Default ke free jika ada error
                         }
-                        console.log("Status Pengguna Saat Ini:", currentUserStatus);
+                        console.log("Status Pengguna Saat Ini (setelah cek kedaluwarsa):", currentUserStatus);
 
                         // Tampilkan aplikasi utama, sembunyikan login
                         mainAppContainer.classList.remove('hidden');
                         authContainer.classList.add('hidden');
                         
-                        // Tampilkan email pengguna DAN status
-                        const statusDisplay = currentUserStatus === 'pro' 
-                            ? '<span class="ml-2 px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">PRO</span>' 
-                            : '<span class="ml-2 px-2 py-0.5 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">FREE</span>';
+                        // (MODIFIKASI) Tampilan status dinamis
+                        let statusDisplay;
+                        if (currentUserStatus === 'pro') {
+                            statusDisplay = `<span class="ml-2 px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">PRO (Aktif s/d ${proExpiryDateString})</span>`;
+                        } else {
+                            statusDisplay = '<span class="ml-2 px-2 py-0.5 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">FREE</span>';
+                        }
                         
                         document.getElementById('user-email-display').innerHTML = `${user.email || 'Pengguna Terautentikasi'} ${statusDisplay}`;
                         
@@ -1908,6 +2064,14 @@ Terima kasih atas kepercayaan Anda.
                             upgradeButton.classList.remove('hidden');
                         } else {
                             upgradeButton.classList.add('hidden');
+                        }
+                        
+                        // Tampilkan/sembunyikan Panel Admin
+                        const adminPanel = document.getElementById('admin-panel');
+                        if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                            adminPanel.classList.remove('hidden');
+                        } else {
+                            adminPanel.classList.add('hidden');
                         }
 
                         // Mulai mendengarkan data booking
@@ -1978,7 +2142,8 @@ Terima kasih atas kepercayaan Anda.
             setupOwnerSignatureModal(); // TTD Pimpinan
             setupDeleteModalListeners(); // Setup modal hapus
             setupUpgradeButton(); // (DIUBAH) Setup tombol upgrade
-            setupUpgradeModalListeners(); // (BARU) Setup listener untuk modal upgrade
+            setupUpgradeModalListeners(); // Setup listener untuk modal upgrade
+            setupAdminPanel(); // (BARU) Setup listener untuk panel admin
         });
 
     </script>
