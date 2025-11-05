@@ -35,6 +35,22 @@
             border-radius: 0.25rem;
             cursor: crosshair;
         }
+
+        /* (BARU) Style untuk tabel laporan admin */
+        .admin-report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .admin-report-table th, .admin-report-table td {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            padding: 0.75rem 1rem; /* p-3 px-4 */
+            text-align: left;
+            font-size: 0.875rem; /* text-sm */
+        }
+        .admin-report-table th {
+            background-color: #f9fafb; /* gray-50 */
+        }
     </style>
     <!-- Memuat Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -113,27 +129,105 @@
                 </div>
             </header>
 
-            <!-- (BARU) PANEL ADMIN - Disembunyikan secara default -->
-            <div id="admin-panel" class="hidden mb-6 bg-yellow-50 border border-yellow-300 shadow-lg rounded-2xl overflow-hidden">
-                <div class="px-6 py-5 bg-yellow-100 border-b border-yellow-300">
-                    <h2 class="text-xl font-semibold text-yellow-900">Panel Admin</h2>
-                    <p class="text-sm text-yellow-800 mt-1">Alat ini hanya terlihat oleh Anda (Admin).</p>
-                </div>
-                <div class="p-6 space-y-4">
-                    <h3 class="text-lg font-medium text-gray-900">Upgrade User ke PRO</h3>
-                    <div>
-                        <label for="admin-user-id" class="block text-sm font-medium text-gray-700">User ID (Salin dari pesan WA)</label>
-                        <input type="text" id="admin-user-id" placeholder="Masukkan User ID pengguna..." class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <!-- (MODIFIKASI) PANEL ADMIN - Diperluas dengan Manajemen Afiliasi & Laporan -->
+            <div id="admin-panel" class="hidden mb-6 space-y-8">
+                
+                <!-- Bagian 1: Upgrade User -->
+                <div class="bg-yellow-50 border border-yellow-300 shadow-lg rounded-2xl overflow-hidden">
+                    <div class="px-6 py-5 bg-yellow-100 border-b border-yellow-300">
+                        <h2 class="text-xl font-semibold text-yellow-900">Panel Admin: Upgrade User</h2>
+                        <p class="text-sm text-yellow-800 mt-1">Alat ini hanya terlihat oleh Anda (Admin).</p>
                     </div>
-                    <div>
-                        <label for="admin-voucher-code" class="block text-sm font-medium text-gray-700">Kode Voucher (Opsional, untuk pelacakan)</label>
-                        <input type="text" id="admin-voucher-code" placeholder="Contoh: JANA (Opsional)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label for="admin-user-id" class="block text-sm font-medium text-gray-700">User ID (Salin dari pesan WA)</label>
+                            <input type="text" id="admin-user-id" placeholder="Masukkan User ID pengguna..." class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <!-- (MODIFIKASI) Berubah dari text input menjadi dropdown -->
+                            <label for="admin-voucher-select" class="block text-sm font-medium text-gray-700">Kode Voucher (Pilih untuk pelacakan)</label>
+                            <select id="admin-voucher-select" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Tanpa Voucher / Upgrade Biasa</option>
+                                <!-- Opsi voucher akan diisi oleh JS dari koleksi 'affiliates' -->
+                            </select>
+                        </div>
+                        <button id="admin-upgrade-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700">
+                            Upgrade Pengguna Ini ke PRO (1 Tahun)
+                        </button>
+                        <p id="admin-status-message" class="text-center text-sm font-medium"></p>
                     </div>
-                    <button id="admin-upgrade-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700">
-                        Upgrade Pengguna Ini ke PRO (1 Tahun)
-                    </button>
-                    <p id="admin-status-message" class="text-center text-sm font-medium"></p>
                 </div>
+
+                <!-- (BARU) Bagian 2: Kelola Afiliasi -->
+                <div class="bg-blue-50 border border-blue-300 shadow-lg rounded-2xl overflow-hidden">
+                    <div class="px-6 py-5 bg-blue-100 border-b border-blue-300">
+                        <h2 class="text-xl font-semibold text-blue-900">Panel Admin: Kelola Afiliasi</h2>
+                        <p class="text-sm text-blue-800 mt-1">Tambahkan/Edit data Afiliator (Influencer) di sini.</p>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Form Tambah Afiliasi -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-gray-900">Tambah / Perbarui Afiliasi</h3>
+                             <div>
+                                <label for="affiliate-code" class="block text-sm font-medium text-gray-700">Kode Voucher (Unik, huruf besar)</label>
+                                <input type="text" id="affiliate-code" placeholder="JANA" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="affiliate-name" class="block text-sm font-medium text-gray-700">Nama Pemilik Voucher</label>
+                                <input type="text" id="affiliate-name" placeholder="Jana Whilayu" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="affiliate-contact" class="block text-sm font-medium text-gray-700">Info Kontak (Email/WA)</label>
+                                <input type="text" id="affiliate-contact" placeholder="janawhilayu@gmail.com" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <button id="admin-save-affiliate-button" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                Simpan Afiliasi
+                            </button>
+                            <p id="admin-affiliate-status" class="text-center text-sm font-medium"></p>
+                        </div>
+                        <!-- Daftar Afiliasi Saat Ini -->
+                        <div class="space-y-2">
+                             <h3 class="text-lg font-medium text-gray-900">Afiliasi Terdaftar</h3>
+                             <p class_id="text-xs text-gray-600 mb-2">Daftar ini akan otomatis mengisi dropdown "Kode Voucher" di atas.</p>
+                             <div id="affiliate-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                <p class="text-sm text-gray-500">Memuat afiliasi...</p>
+                                <!-- Daftar diisi oleh JS -->
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- (BARU) Bagian 3: Laporan Komisi -->
+                 <div class="bg-gray-50 border border-gray-300 shadow-lg rounded-2xl overflow-hidden">
+                    <div class="px-6 py-5 bg-gray-100 border-b border-gray-300">
+                        <h2 class="text-xl font-semibold text-gray-900">Panel Admin: Laporan Komisi</h2>
+                        <p class="text-sm text-gray-800 mt-1">Lacak komisi yang belum dibayar per bulan.</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <!-- Filter Laporan -->
+                        <div>
+                            <label for="admin-report-month" class="block text-sm font-medium text-gray-700">Pilih Bulan Laporan</label>
+                            <div class="flex space-x-2 mt-1">
+                                <select id="admin-report-month-select" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Opsi bulan diisi oleh JS -->
+                                </select>
+                                <select id="admin-report-year-select" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Opsi tahun diisi oleh JS -->
+                                </select>
+                                <button id="admin-generate-report-button" class="py-2 px-5 border border-transparent rounded-lg shadow-sm font-medium text-white bg-gray-700 hover:bg-gray-800">
+                                    Buat
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Kontainer Hasil Laporan -->
+                        <div id="admin-report-loading" class="hidden text-center text-gray-600">Membuat laporan...</div>
+                        <div id="admin-report-container" class="overflow-x-auto">
+                            <!-- Tabel laporan akan di-render di sini oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -173,7 +267,7 @@
                                     <div class="sm:col-span-2">
                                          <label for="logo-usaha" class="block text-sm font-medium text-gray-700">Upload Logo/Banner (Opsional)</label>
                                         <input type="file" id="logo-usaha" accept="image/png, image/jpeg" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                        <p class="text-xs text-gray-500 mt-1">Disarankan: Lebar 800 X 200 px (format PNG/JPG).</p>
+                                        <p class="text-xs text-gray-500 mt-1">Disarankan: Lebar 800px (format PNG/JPG). Panjang/tinggi otomatis.</p>
                                         <img id="logo-preview" class="hidden mt-2 max-h-24 border border-gray-200 rounded" alt="Pratinjau Logo">
                                     </div>
                                     
@@ -262,7 +356,7 @@
                                 
                                 <div id="form-tambah-layanan" class="hidden space-y-2 mt-2 p-3 bg-gray-50 rounded-lg border">
                                     <label for="input-nama-layanan-baru" class="block text-sm font-medium text-gray-700">Nama Layanan Baru:</label>
-                                    <input type="text" id="input-nama-layanan-baru" placeholder="Contoh: Pentas Seni (Nama Grup)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="text" id="input-nama-layanan-baru" placeholder="Contoh: Panggung Rigging" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                     <div class="flex space-x-2">
                                         <button type="button" id="tombol-simpan-layanan-baru" class="text-sm py-1 px-3 border border-transparent rounded-lg shadow-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Simpan</button>
                                         <button type="button" id="tombol-batal-layanan-baru" class="text-sm py-1 px-3 border border-gray-300 rounded-lg shadow-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Batal</button>
@@ -468,12 +562,14 @@
             </div>
         </div>
     </div>
+    
+    <!-- (BARU) Textarea tersembunyi untuk fallback copy-paste -->
+    <textarea id="clipboard-helper" style="position: absolute; left: -9999px; top: 0; opacity: 0;"></textarea>
 
 
     <!-- Script Firebase (Wajib) -->
     <script type="module">
-        // Import fungsi yang diperlukan dari SDK
-        // (MODIFIKASI) Menambahkan Timestamp
+        // (MODIFIKASI) Menambahkan Timestamp, getDocs, where, updateDoc, writeBatch
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
@@ -486,13 +582,17 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, collection, onSnapshot, 
-            query, setLogLevel, deleteDoc, setDoc, getDoc, Timestamp 
+            query, setLogLevel, deleteDoc, setDoc, getDoc, Timestamp,
+            getDocs, where, updateDoc, writeBatch
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI DAN INISIALISASI ---
 
         // (BARU) Tentukan email admin di sini
         const ADMIN_EMAIL = "janawhilayu@gmail.com"; 
+        
+        // (BARU) Tentukan nilai komisi
+        const COMMISSION_VALUE = 99500;
 
         // Konfigurasi layanan kita (HARDCODED untuk aplikasi ini)
         const LAYANAN_TERSEDIA = [
@@ -506,7 +606,8 @@
         let customerSignaturePad; // Untuk TTD Pelanggan
         let ownerSignaturePad; // Untuk TTD Pimpinan
         let currentUserStatus = "free"; // Status pengguna, default 'free'
-        
+        let affiliateData = new Map(); // (BARU) Cache untuk data afiliasi
+
         // --- BAGIAN APLIKASI UTAMA ---
         
         // 2. Fungsi untuk merender daftar layanan awal
@@ -1817,7 +1918,7 @@ Terima kasih atas kepercayaan Anda.
             const infoHargaPromo = document.getElementById('info-harga-promo');
             
             // (DIUBAH) Gunakan Array untuk menampung semua kode valid
-            const VOUCHER_VALID = ["JANA", "ADJIE", "ANDARU","SYUKUR"]; 
+            const VOUCHER_VALID = ["JANA", "ADJIE", "SYUKUR"]; 
 
             const closeModal = () => {
                 upgradeModal.classList.add('hidden');
@@ -1876,16 +1977,16 @@ Terima kasih atas kepercayaan Anda.
             });
         }
 
-        // (MODIFIKASI) 27. Setup listener untuk Panel Admin (Menambahkan Expiry Date)
+        // (MODIFIKASI) 27. Setup listener untuk Panel Admin (Menambahkan Log Komisi)
         function setupAdminPanel() {
             const upgradeButton = document.getElementById('admin-upgrade-button');
             const statusMessage = document.getElementById('admin-status-message');
             const userIdInput = document.getElementById('admin-user-id');
-            const voucherCodeInput = document.getElementById('admin-voucher-code');
+            const voucherSelect = document.getElementById('admin-voucher-select'); // (MODIFIKASI) Diubah ke select
 
             upgradeButton.addEventListener('click', async () => {
                 const userIdToUpgrade = userIdInput.value.trim();
-                const voucherCode = voucherCodeInput.value.trim().toUpperCase();
+                const voucherCode = voucherSelect.value; // (MODIFIKASI) Ambil dari select
 
                 // Validasi input (Hanya User ID yang wajib)
                 if (!userIdToUpgrade) {
@@ -1903,7 +2004,7 @@ Terima kasih atas kepercayaan Anda.
                     // Tentukan path ke dokumen pengguna yang akan di-upgrade
                     const userDocRef = doc(db, 'artifacts', appId, 'users', userIdToUpgrade);
 
-                    // (MODIFIKASI) Hitung tanggal kedaluwarsa (1 tahun dari sekarang)
+                    // Hitung tanggal kedaluwarsa (1 tahun dari sekarang)
                     const now = new Date();
                     const expiryDate = new Date(now.setFullYear(now.getFullYear() + 1));
                     const expiryTimestamp = Timestamp.fromDate(expiryDate); // Ubah ke Timestamp Firestore
@@ -1914,12 +2015,25 @@ Terima kasih atas kepercayaan Anda.
                         proExpiresAt: expiryTimestamp // <-- FIELD BARU
                     };
 
-                    // Hanya tambahkan field voucherUsed JIKA diisi
+                    // (BARU) Jika voucher dipilih, buat log komisi
                     if (voucherCode) {
-                        dataToUpdate.voucherUsed = voucherCode;
+                        dataToUpdate.voucherUsed = voucherCode; // Tambahkan ke profil user
+                        
+                        // Buat data log komisi
+                        const commissionLogData = {
+                            voucherCode: voucherCode,
+                            userIdUpgraded: userIdToUpgrade,
+                            commissionAmount: COMMISSION_VALUE,
+                            upgradeDate: Timestamp.now(),
+                            reportMonth: `${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`, // Format: "11-2025"
+                            paidStatus: false // Default belum dibayar
+                        };
+                        
+                        // Simpan log komisi
+                        await addDoc(collection(db, `artifacts/${appId}/commission_log`), commissionLogData);
                     }
 
-                    // Jalankan perintah write dengan data yang dinamis
+                    // Jalankan perintah write (upgrade user)
                     await setDoc(userDocRef, dataToUpdate, { merge: true });
 
                     // Pesan sukses yang dinamis
@@ -1928,7 +2042,7 @@ Terima kasih atas kepercayaan Anda.
                     });
                     
                     if (voucherCode) {
-                        statusMessage.textContent = `Sukses! Pengguna ${userIdToUpgrade} sekarang PRO (hingga ${expiryDateString}) dengan voucher ${voucherCode}.`;
+                        statusMessage.textContent = `Sukses! Pengguna ${userIdToUpgrade} sekarang PRO (hingga ${expiryDateString}) dengan voucher ${voucherCode}. Log komisi dibuat.`;
                     } else {
                         statusMessage.textContent = `Sukses! Pengguna ${userIdToUpgrade} sekarang PRO (hingga ${expiryDateString}).`;
                     }
@@ -1936,7 +2050,7 @@ Terima kasih atas kepercayaan Anda.
                     
                     // Reset input
                     userIdInput.value = '';
-                    voucherCodeInput.value = '';
+                    voucherSelect.value = ''; // Reset dropdown
 
                 } catch (error) {
                     console.error("Gagal upgrade user:", error);
@@ -1952,6 +2066,341 @@ Terima kasih atas kepercayaan Anda.
                     upgradeButton.textContent = "Upgrade Pengguna Ini ke PRO (1 Tahun)";
                 }
             });
+        }
+        
+        // (BARU) 28. Fungsi untuk mengelola Afiliasi
+        function setupAffiliateManager() {
+            const saveButton = document.getElementById('admin-save-affiliate-button');
+            const codeInput = document.getElementById('affiliate-code');
+            const nameInput = document.getElementById('affiliate-name');
+            const contactInput = document.getElementById('affiliate-contact');
+            const statusMessage = document.getElementById('admin-affiliate-status');
+
+            saveButton.addEventListener('click', async () => {
+                const code = codeInput.value.trim().toUpperCase();
+                const name = nameInput.value.trim();
+                const contact = contactInput.value.trim();
+
+                if (!code || !name) {
+                    statusMessage.textContent = "Error: Kode Voucher dan Nama tidak boleh kosong.";
+                    statusMessage.className = "text-center text-sm font-medium text-red-600";
+                    return;
+                }
+                
+                saveButton.disabled = true;
+                statusMessage.textContent = "Menyimpan...";
+                statusMessage.className = "text-center text-sm font-medium text-blue-600";
+                
+                try {
+                    // Gunakan KODE VOUCHER sebagai ID Dokumen
+                    const affiliateDocRef = doc(db, `artifacts/${appId}/affiliates`, code);
+                    
+                    await setDoc(affiliateDocRef, {
+                        voucherCode: code,
+                        affiliatorName: name,
+                        contactInfo: contact
+                    }, { merge: true }); // merge: true akan update jika sudah ada, atau buat baru jika belum
+
+                    statusMessage.textContent = `Sukses! Afiliasi ${code} disimpan.`;
+                    statusMessage.className = "text-center text-sm font-medium text-green-600";
+                    
+                    // Kosongkan form
+                    codeInput.value = '';
+                    nameInput.value = '';
+                    contactInput.value = '';
+
+                } catch (error) {
+                    console.error("Gagal simpan afiliasi:", error);
+                    statusMessage.textContent = "Error: Gagal menyimpan. Cek konsol.";
+                    statusMessage.className = "text-center text-sm font-medium text-red-600";
+                } finally {
+                    saveButton.disabled = false;
+                }
+            });
+        }
+
+        // (BARU) 29. Fungsi untuk memuat data Afiliasi (untuk cache dan dropdown)
+        async function loadAffiliates() {
+            if (!db || !appId) return;
+            
+            const affiliateListContainer = document.getElementById('affiliate-list-container');
+            const voucherSelect = document.getElementById('admin-voucher-select');
+
+            const q = query(collection(db, `artifacts/${appId}/affiliates`));
+            
+            onSnapshot(q, (querySnapshot) => {
+                affiliateData.clear(); // Bersihkan cache lama
+                affiliateListContainer.innerHTML = ''; // Kosongkan daftar UI
+                
+                // Kosongkan dropdown (sisakan opsi pertama)
+                while (voucherSelect.options.length > 1) {
+                    voucherSelect.remove(1);
+                }
+                
+                if (querySnapshot.empty) {
+                     affiliateListContainer.innerHTML = '<p class="text-sm text-gray-500">Belum ada afiliasi. Silakan tambahkan.</p>';
+                     return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const code = doc.id;
+                    
+                    // 1. Simpan ke cache Map (Penting untuk laporan)
+                    affiliateData.set(code, data);
+                    
+                    // 2. Tampilkan di daftar "Afiliasi Terdaftar"
+                    const div = document.createElement('div');
+                    div.className = "p-2 bg-white border rounded-md text-sm";
+                    div.innerHTML = `<strong class="text-blue-700">${data.voucherCode}</strong>: ${data.affiliatorName} (${data.contactInfo || 'No contact'})`;
+                    affiliateListContainer.appendChild(div);
+
+                    // 3. Tambahkan ke dropdown "Upgrade User"
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = `${data.affiliatorName} (${code})`;
+                    voucherSelect.appendChild(option);
+                });
+
+            }, (error) => {
+                console.error("Gagal memuat afiliasi:", error);
+                affiliateListContainer.innerHTML = '<p class="text-sm text-red-500">Gagal memuat daftar.</p>';
+            });
+        }
+        
+        // (BARU) 30. Fungsi untuk membuat Laporan Komisi
+        function setupReportGenerator() {
+            const reportButton = document.getElementById('admin-generate-report-button');
+            const monthSelect = document.getElementById('admin-report-month-select');
+            const yearSelect = document.getElementById('admin-report-year-select');
+            const reportContainer = document.getElementById('admin-report-container');
+            const loadingText = document.getElementById('admin-report-loading');
+
+            // Isi dropdown bulan dan tahun
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            // Isi bulan
+            months.forEach((month, index) => {
+                const value = (index + 1).toString().padStart(2, '0'); // "01", "02", ... "12"
+                monthSelect.options[index] = new Option(month, value);
+            });
+            monthSelect.value = (currentMonth + 1).toString().padStart(2, '0'); // Default ke bulan ini
+
+            // Isi tahun (3 tahun terakhir)
+            for (let i = 0; i < 3; i++) {
+                const year = currentYear - i;
+                yearSelect.options[i] = new Option(year, year);
+            }
+            
+            // Listener untuk tombol "Buat Laporan"
+            reportButton.addEventListener('click', async () => {
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const reportMonthString = `${month}-${year}`; // Format "11-2025"
+                
+                loadingText.classList.remove('hidden');
+                reportContainer.innerHTML = '';
+                reportButton.disabled = true;
+
+                try {
+                    // 1. Ambil semua log komisi untuk bulan ini yang BELUM DIBAYAR
+                    const logQuery = query(
+                        collection(db, `artifacts/${appId}/commission_log`),
+                        where("reportMonth", "==", reportMonthString),
+                        where("paidStatus", "==", false)
+                    );
+                    
+                    const querySnapshot = await getDocs(logQuery);
+                    
+                    if (querySnapshot.empty) {
+                        loadingText.classList.add('hidden');
+                        reportButton.disabled = false;
+                        reportContainer.innerHTML = `<p class="text-sm text-gray-600 text-center py-4">Tidak ada komisi yang belum dibayar untuk ${reportMonthString}.</p>`;
+                        return;
+                    }
+                    
+                    // 2. Agregasi (Hitung) Laporan
+                    const reportData = new Map();
+                    querySnapshot.forEach(doc => {
+                        const log = doc.data();
+                        const code = log.voucherCode;
+                        
+                        if (!reportData.has(code)) {
+                            // Jika ini entri pertama untuk kode ini, buatkan laporannya
+                            const affiliate = affiliateData.get(code) || { affiliatorName: "Afiliasi Terhapus", contactInfo: "N/A" };
+                            reportData.set(code, {
+                                name: affiliate.affiliatorName,
+                                contact: affiliate.contactInfo,
+                                code: code,
+                                count: 0,
+                                total: 0,
+                                logIds: [] // Kumpulkan ID log untuk tombol "Tandai Sudah Bayar"
+                            });
+                        }
+                        
+                        // Tambahkan data ke laporan
+                        const current = reportData.get(code);
+                        current.count++;
+                        current.total += log.commissionAmount;
+                        current.logIds.push(doc.id);
+                    });
+
+                    // 3. Render Laporan menjadi tabel HTML
+                    renderReportTable(Array.from(reportData.values()), reportMonthString);
+
+                } catch (error) {
+                    console.error("Gagal membuat laporan:", error);
+                    reportContainer.innerHTML = `<p class="text-sm text-red-500 text-center py-4">Error: Gagal mengambil data. Cek konsol.</p>`;
+                } finally {
+                    loadingText.classList.add('hidden');
+                    reportButton.disabled = false;
+                }
+            });
+
+            // Pasang listener untuk tombol di dalam tabel laporan (copy dan mark paid)
+            reportContainer.addEventListener('click', async (e) => {
+                const copyButton = e.target.closest('.copy-message-btn');
+                const paidButton = e.target.closest('.mark-paid-btn');
+
+                // Jika tombol "Salin Pesan" diklik
+                if (copyButton) {
+                    const name = copyButton.dataset.name;
+                    const total = copyButton.dataset.total;
+                    const contact = copyButton.dataset.contact;
+                    const month = `${monthSelect.options[monthSelect.selectedIndex].text} ${yearSelect.value}`;
+
+                    const message = `Halo ${name},\n\nBerikut adalah laporan komisi Anda untuk kode voucher [${copyButton.dataset.code}] bulan ${month}:\n\nTotal Pengguna: ${copyButton.dataset.count}\nTotal Komisi: ${total}\n\nMohon konfirmasi dan kirimkan info pembayaran Anda (No. Rekening/E-Wallet) ke ${contact} agar komisi dapat segera diproses.\n\nTerima kasih,\nAdmin AaAi KUITANSI`;
+                    
+                    copyToClipboardFallback(message, () => {
+                        copyButton.textContent = "Tersalin!";
+                        setTimeout(() => copyButton.textContent = "Salin Pesan", 2000);
+                    }, () => {
+                        alert("Gagal menyalin. Cek konsol.");
+                    });
+                }
+                
+                // Jika tombol "Tandai Sudah Bayar" diklik
+                if (paidButton) {
+                    const logIds = paidButton.dataset.logids.split(','); // Ambil daftar ID
+                    if (!logIds.length || !confirm(`Anda yakin ingin menandai ${logIds.length} komisi untuk ${paidButton.dataset.code} sebagai SUDAH DIBAYAR? Aksi ini tidak bisa dibatalkan.`)) {
+                        return;
+                    }
+                    
+                    paidButton.disabled = true;
+                    paidButton.textContent = "Memproses...";
+                    
+                    try {
+                        // Gunakan Batch Write untuk efisiensi
+                        const batch = writeBatch(db);
+                        logIds.forEach(id => {
+                            const docRef = doc(db, `artifacts/${appId}/commission_log`, id);
+                            batch.update(docRef, { paidStatus: true });
+                        });
+                        
+                        await batch.commit();
+                        
+                        // Sukses
+                        paidButton.textContent = "Sudah Dibayar";
+                        paidButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        paidButton.classList.add('bg-gray-400');
+                        // Sembunyikan tombol Salin juga
+                        const copyBtn = paidButton.closest('tr').querySelector('.copy-message-btn');
+                        if(copyBtn) copyBtn.style.display = 'none';
+
+                    } catch (error) {
+                        console.error("Gagal menandai lunas:", error);
+                        alert("Gagal memperbarui status. Cek konsol.");
+                        paidButton.disabled = false;
+                        paidButton.textContent = "Tandai Sudah Bayar";
+                    }
+                }
+            });
+        }
+        
+        // (BARU) 31. Fungsi untuk merender Tabel Laporan
+        function renderReportTable(reportArray, reportMonthString) {
+            const container = document.getElementById('admin-report-container');
+            const totalKomisiBulanIni = reportArray.reduce((acc, item) => acc + item.total, 0);
+            
+            let tableHTML = `
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Laporan untuk: ${reportMonthString} (Belum Dibayar)</h3>
+                <table class="admin-report-table">
+                    <thead>
+                        <tr>
+                            <th>Pemilik Voucher</th>
+                            <th>Kode</th>
+                            <th>Total Pengguna</th>
+                            <th>Total Komisi</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            if (reportArray.length === 0) {
+                 tableHTML += `<tr><td colspan="5" class="text-center">Tidak ada komisi yang belum dibayar untuk bulan ini.</td></tr>`;
+            } else {
+                reportArray.forEach(item => {
+                    tableHTML += `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.code}</td>
+                            <td>${item.count}</td>
+                            <td><strong>${formatRupiah(item.total)}</strong></td>
+                            <td class="space-x-2">
+                                <button class="copy-message-btn text-sm py-1 px-3 rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                    data-name="${item.name}"
+                                    data-total="${formatRupiah(item.total)}"
+                                    data-count="${item.count}"
+                                    data-code="${item.code}"
+                                    data-contact="${item.contact}">
+                                    Salin Pesan
+                                </button>
+                                <button class="mark-paid-btn text-sm py-1 px-3 rounded-md text-white bg-green-600 hover:bg-green-700"
+                                    data-logids="${item.logIds.join(',')}"
+                                    data-code="${item.code}">
+                                    ✔ Tandai Lunas
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tableHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-100">
+                            <td colspan="3" class="text-right font-bold">Total Komisi Belum Dibayar (Bulan Ini)</td>
+                            <td colspan="2" class="font-bold text-lg">${formatRupiah(totalKomisiBulanIni)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+        
+        // (BARU) 32. Fungsi fallback untuk Copy-Paste (penting untuk iFrame)
+        function copyToClipboardFallback(text, successCallback, errorCallback) {
+            if (navigator.clipboard) {
+                // Metode modern
+                navigator.clipboard.writeText(text).then(successCallback, errorCallback);
+            } else {
+                // Metode fallback (untuk iFrame/HTTP)
+                try {
+                    const textArea = document.getElementById('clipboard-helper');
+                    textArea.value = text;
+                    textArea.select();
+                    document.execCommand('copy');
+                    successCallback();
+                } catch (err) {
+                    errorCallback(err);
+                }
+            }
         }
 
 
@@ -2066,10 +2515,15 @@ Terima kasih atas kepercayaan Anda.
                             upgradeButton.classList.add('hidden');
                         }
                         
-                        // Tampilkan/sembunyikan Panel Admin
+                        // (BARU) Tampilkan/sembunyikan Panel Admin
                         const adminPanel = document.getElementById('admin-panel');
+                        // (MODIFIKASI) Cek email tanpa peka huruf besar/kecil
                         if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                             adminPanel.classList.remove('hidden');
+                            
+                            // (BARU) Muat data afiliasi HANYA jika admin
+                            loadAffiliates();
+                            
                         } else {
                             adminPanel.classList.add('hidden');
                         }
@@ -2143,7 +2597,11 @@ Terima kasih atas kepercayaan Anda.
             setupDeleteModalListeners(); // Setup modal hapus
             setupUpgradeButton(); // (DIUBAH) Setup tombol upgrade
             setupUpgradeModalListeners(); // Setup listener untuk modal upgrade
-            setupAdminPanel(); // (BARU) Setup listener untuk panel admin
+            
+            // (BARU) Setup semua fitur Panel Admin
+            setupAdminPanel(); 
+            setupAffiliateManager();
+            setupReportGenerator();
         });
 
     </script>
